@@ -53,8 +53,3 @@ A feature flag manager built with [Go](https://golang.org/). Manage your feature
 You should now have a local instance of FeatFlag running on `localhost:5173` :smiley:
 
 And thats all there is so far!.
-
-## Contributing
-
-Any PR's will be read and considered. If you have any questions, feel free to open an issue.
-Would like to work on getting the npm library up and running, so if you have any experience with that, please reach out!
