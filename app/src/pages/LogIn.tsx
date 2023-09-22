@@ -1,5 +1,8 @@
-import React, { useRef, useState } from 'react'
+import React, { useContext, useRef, useState } from 'react'
 import {z} from 'zod'
+import Loader from '../components/Loader'
+import { useNavigate } from 'react-router'
+import { AuthContext } from '../context/AuthProvider'
 
 const ZEmail = z.string().email()
 
@@ -7,9 +10,10 @@ const LogIn = () => {
 
     const emailRef = useRef() as React.MutableRefObject<HTMLInputElement>
     const passwordRef = useRef() as React.MutableRefObject<HTMLInputElement>
-
+    const navigate = useNavigate()
     const [showErrorEmailMessage, setShowErrorEmailMessage] = useState(false)
     const [loading, setLoading] = useState(false)
+    const {setUser} = useContext(AuthContext)
 
     const requestLogIn = async (email: string, password: string) => {
         try {
@@ -25,7 +29,8 @@ const LogIn = () => {
                 })
             })
             const data = await res.json()
-            if (data && data.email) {
+            if (data && data.status === "success") {
+                setUser(data.user)
                 return true
             } else {
                 return false
@@ -60,10 +65,13 @@ const LogIn = () => {
             setLoading(true)
             const loggedIn = await requestLogIn(emailRef.current.value, passwordRef.current.value)
             if (loggedIn) {
+                navigate("/manage")
+            } else {
                 setLoading(false)
             }
         } catch (error) {
             console.log(error)
+            setLoading(false)
         }
     }
 
@@ -72,7 +80,7 @@ const LogIn = () => {
       <h1 className=" font-LuckiestGuy text-6xl ">FeatFlag</h1>
       <div className='w-[400px] shadow-md p-8 rounded-md flex flex-col items-center gap-4'>
         {
-            loading ? null : <>
+            loading ? <Loader/> : <>
             <h1>Log In with your email and password</h1>
         <div className='w-full flex flex-col gap-1'>
         <input ref={emailRef} type='email' placeholder='Email' className='w-full rounded-md outline-none shadow-md bg-white h-10 p-2'/>

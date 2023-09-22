@@ -59,39 +59,53 @@ func RegisterUser(ctx *gin.Context) {
 		return
 	}
 
+	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
+		Issuer:    strconv.Itoa(int(user.Id)),
+		ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(time.Hour * 24)},
+	})
+
+	token, err := claims.SignedString([]byte(Secretkey))
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "error logging you in"})
+		return
+	}
+
+	ctx.SetCookie("jwt", token, 86400, "/", "localhost", false, true)
+
 	ctx.JSON(http.StatusOK, user)
 }
 
 func LogIn(ctx *gin.Context) {
 
-	var registerUser User
+	var loginUser User
 
-	if err := ctx.ShouldBindJSON(&registerUser); err != nil {
+	if err := ctx.ShouldBindJSON(&loginUser); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if registerUser.Email == "" {
+	if loginUser.Email == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid email"})
 		return
 	}
-	if !validEmail(registerUser.Email) {
+	if !validEmail(loginUser.Email) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid email"})
 		return
 	}
-	if registerUser.Password == "" {
+	if loginUser.Password == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid password"})
 		return
 	}
 
-	password, _ := bcrypt.GenerateFromPassword([]byte(registerUser.Password), 14)
+	password, _ := bcrypt.GenerateFromPassword([]byte(loginUser.Password), 14)
 
 	user := models.User{
-		Email:    registerUser.Email,
+		Email:    loginUser.Email,
 		Password: password,
 	}
 
-	if err := database.DB.Where("email = ?", registerUser.Email).First(&user).Error; err != nil {
+	if err := database.DB.Where("email = ?", loginUser.Email).First(&user).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Sorry there was an error logging you in"})
 		return
 	}
@@ -101,7 +115,7 @@ func LogIn(ctx *gin.Context) {
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword(user.Password, []byte(registerUser.Password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword(user.Password, []byte(loginUser.Password)); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "your email/password was incorrect"})
 		return
 	}
@@ -121,8 +135,8 @@ func LogIn(ctx *gin.Context) {
 	ctx.SetCookie("jwt", token, 86400, "/", "localhost", false, true)
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "Logged In",
+		"status": "success",
+		"user":   user,
 	})
 }
 

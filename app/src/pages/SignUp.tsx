@@ -1,6 +1,8 @@
 import React, { ChangeEvent, useContext, useRef, useState } from 'react'
 import {z} from 'zod'
 import { AuthContext } from '../context/AuthProvider'
+import { useNavigate } from 'react-router'
+import Loader from '../components/Loader'
 
 const ZEmail = z.string().email()
 
@@ -12,6 +14,7 @@ const SignUp = () => {
     const [showConfirmMessage, setShowConfirmMessage] = useState(false)
     const [showErrorEmailMessage, setShowErrorEmailMessage] = useState(false)
     const [loading, setLoading] = useState(false)
+    const navigate = useNavigate()
     const {setUser} = useContext(AuthContext)
     const handleConfirm = (event: ChangeEvent<HTMLInputElement>) => {
         if (event.currentTarget.value !== passwordRef.current.value) {
@@ -37,7 +40,7 @@ const SignUp = () => {
 
     const requestSignUp = async (email: string, password: string) => {
         try {
-            const res = await fetch("http://localhost:8080/api/auth/signup", {
+            const res = await fetch("http://localhost:8080/api/auth/register", {
                 method: "POST",
                 credentials: "include",
                 headers: {
@@ -49,6 +52,7 @@ const SignUp = () => {
                 })
             })
             const data = await res.json()
+            console.log(data)
             if (data && data.email) {
                 setUser(data)
                 return true
@@ -92,10 +96,13 @@ const SignUp = () => {
             setLoading(true)
             const signedUp = await requestSignUp(emailRef.current.value, passwordRef.current.value)
             if (signedUp) {
-             setLoading(false)  
+                navigate("/manage")
+            } else {
+                setLoading(false)
             }
         } catch (error) {
             console.log(error)
+            setLoading(false)
         }
     }
 
@@ -104,7 +111,7 @@ const SignUp = () => {
       <h1 className=" font-LuckiestGuy text-6xl ">FeatFlag</h1>
       <div className='w-[400px] shadow-md p-8 rounded-md flex flex-col items-center gap-4'>
         {
-            loading ? null : <>
+            loading ? <Loader/> : <>
             <h1>Sign Up with your email and password</h1>
         <div className='w-full flex flex-col gap-1'>
         <input ref={emailRef} type='email' placeholder='Email' className='w-full rounded-md outline-none shadow-md bg-white h-10 p-2'/>

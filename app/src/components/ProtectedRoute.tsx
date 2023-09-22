@@ -33,10 +33,14 @@ const ProtectedRoute = ({children}: {children: ReactNode}): ReactNode => {
   }
 
   if (loading) {
-    return <Loader/>
+    return <div className='w-screen h-screen bg-main flex items-center justify-center'>
+      <Loader/>
+    </div>
   }
 
-  return <Loader/>
+  return <div className='w-screen h-screen bg-main flex items-center justify-center'>
+  <Loader/>
+</div>
 }
 
 
